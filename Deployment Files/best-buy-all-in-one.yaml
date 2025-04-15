@@ -121,22 +121,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: order-service
+  name: best-buy-order-service
 spec:
   replicas: 1 # Single replica
   selector:
     matchLabels:
-      app: order-service
+      app: best-buy-order-service
   template:
     metadata:
       labels:
-        app: order-service
+        app: best-buy-order-service
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-        - name: order-service
-          image: ramymohamed/order-service-l8:latest # Custom image for order service
+        - name: best-buy-order-service
+          image: yvanniyonzima/best_buy_order_service:latest # Custom image for order service
           ports:
             - containerPort: 3000 # Order service listens on this port
           env: # Environment variables for configuration
@@ -201,7 +201,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-service
+  name: best-buy-order-service
 spec:
   type: ClusterIP
   ports:
@@ -209,28 +209,28 @@ spec:
       port: 3000
       targetPort: 3000
   selector:
-    app: order-service
+    app: best-buy-order-service
 ---
 # Deployment for Makeline Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: makeline-service
+  name: best-buy-makeline-service
 spec:
   replicas: 1 # Single replica
   selector:
     matchLabels:
-      app: makeline-service
+      app: best-buy-makeline-service
   template:
     metadata:
       labels:
-        app: makeline-service
+        app: best-buy-makeline-service
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-        - name: makeline-service
-          image: ramymohamed/makeline-service-l8:latest # Custom Makeline service image
+        - name: best-buy-makeline-service
+          image: yvanniyonzima/best_buy_makeline_service:latest # Custom Makeline service image
           ports:
             - containerPort: 3001 # Makeline service listens on this port
           env: # Environment variables for configuration
@@ -280,7 +280,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: makeline-service
+  name: best-buy-makeline-service
 spec:
   type: ClusterIP # Internal cluster service
   ports:
@@ -288,33 +288,33 @@ spec:
       port: 3001 # Service port
       targetPort: 3001
   selector:
-    app: makeline-service
+    app: best-buy-makeline-service
 ---
 # Deployment for Product Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-service
+  name: best-buy-product-service
 spec:
   replicas: 1 # Single replica
   selector:
     matchLabels:
-      app: product-service
+      app: best-buy-product-service
   template:
     metadata:
       labels:
-        app: product-service
+        app: best-buy-product-service
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-        - name: product-service
-          image: ramymohamed/product-service-l8:latest # Custom product service image
+        - name: best-buy-product-service
+          image: yvanniyonzima/best_buy_product_service:latest # Custom product service image
           ports:
             - containerPort: 3002 # Product service listens on this port
           env: # Environment variables for configuration
             - name: AI_SERVICE_URL
-              value: "http://ai-service:5001/" # URL for AI service integration
+              value: "http://best-buy-ai-service:5001/" # URL for AI service integration
           resources: # Resource requests and limits
             requests:
               cpu: 1m
@@ -341,7 +341,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: product-service
+  name: best-buy-product-service
 spec:
   type: ClusterIP
   ports:
@@ -349,36 +349,36 @@ spec:
       port: 3002 # Service port
       targetPort: 3002
   selector:
-    app: product-service
+    app: best-buy-product-service
 ---
 # Deployment for Store Front
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: store-front
+  name: best-buy-store-front
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: store-front
+      app: best-buy-store-front
   template:
     metadata:
       labels:
-        app: store-front
+        app: best-buy-store-front
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-        - name: store-front
-          image: ramymohamed/store-front-l8:latest # Front-end store application
+        - name: best-buy-store-front
+          image: yvanniyonzima/best_buy_store_front:latest # Front-end store application
           ports:
             - containerPort: 8080 # Front-end app port
-              name: store-front
+              name: bb-store-front
           env: # Environment variables for backend URLs
             - name: VUE_APP_ORDER_SERVICE_URL
-              value: "http://order-service:3000/"
+              value: "http://best-buy-order-service:3000/"
             - name: VUE_APP_PRODUCT_SERVICE_URL
-              value: "http://product-service:3002/"
+              value: "http://best-buy-product-service:3002/"
           resources: # Resource requests and limits
             requests:
               cpu: 1m
@@ -412,43 +412,43 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: store-front
+  name: best-buy-store-front
 spec:
   ports:
     - port: 80 # Service port exposed outside the cluster
       targetPort: 8080 # Target container port
   selector:
-    app: store-front
+    app: best-buy-store-front
   type: LoadBalancer # Expose service externally via load balancer
 ---
 # Deployment for Store Admin
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: store-admin
+  name: best-buy-store-admin
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: store-admin
+      app: best-buy-store-admin
   template:
     metadata:
       labels:
-        app: store-admin
+        app: best-buy-store-admin
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-        - name: store-admin
-          image: ramymohamed/store-admin-l8:latest # Admin interface for store
+        - name: best-buy-store-admin
+          image: yvanniyonzima/best_buy_store_admin:latest # Admin interface for store
           ports:
             - containerPort: 8081 # Admin app port
-              name: store-admin
+              name: bb-store-admin
           env: # Environment variables for backend URLs
             - name: VUE_APP_PRODUCT_SERVICE_URL
-              value: "http://product-service:3002/"
+              value: "http://best-buy-product-service:3002/"
             - name: VUE_APP_MAKELINE_SERVICE_URL
-              value: "http://makeline-service:3001/"
+              value: "http://best-buy-makeline-service:3001/"
           resources: # Resource requests and limits
             requests:
               cpu: 1m
@@ -482,35 +482,35 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: store-admin
+  name: best-buy-store-admin
 spec:
   ports:
     - port: 80 # Service port exposed outside the cluster
       targetPort: 8081
   selector:
-    app: store-admin
+    app: best-buy-store-admin
   type: LoadBalancer # Expose service externally via load balancer
 ---
 # Deployment for AI Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-service
+  name: best-buy-ai-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-service
+      app: best-buy-ai-service
   template:
     metadata:
       labels:
-        app: ai-service
+        app: best-buy-ai-service
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-        - name: ai-service
-          image: ramymohamed/ai-service-l8:latest
+        - name: best-buy-ai-service
+          image: yvanniyonzima/best_buy_ai_service:latest
           ports:
             - containerPort: 5001
           env:
@@ -519,13 +519,13 @@ spec:
             - name: AZURE_OPENAI_API_VERSION
               value: "2024-07-01-preview"
             - name: AZURE_OPENAI_DEPLOYMENT_NAME # required if using Azure OpenAI
-              value: ""
+              value: "gpt-4"
             - name: AZURE_OPENAI_ENDPOINT # required if using Azure OpenAI
-              value: ""
+              value: "https://best-buy-openai.openai.azure.com/"
             - name: AZURE_OPENAI_DALLE_ENDPOINT
-              value: ""
+              value: "https://best-buy-openai.openai.azure.com/"
             - name: AZURE_OPENAI_DALLE_DEPLOYMENT_NAME
-              value: ""
+              value: "dall-e-3"
             - name: OPENAI_API_KEY # always required
               valueFrom:
                 secretKeyRef:
@@ -564,7 +564,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ai-service
+  name: best-buy-ai-service
 spec:
   type: ClusterIP
   ports:
@@ -572,4 +572,4 @@ spec:
       port: 5001
       targetPort: 5001
   selector:
-    app: ai-service
+    app: best-buy-ai-service

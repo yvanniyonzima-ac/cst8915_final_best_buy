@@ -98,12 +98,12 @@ Here are the step-by-step instructions to deploy the Best Buy application in a K
 
 | Service                  | Docker Image Link                                                              |
 | ------------------------ | ---------------------------------------------------------------------------- |
-| best\_buy\_store\_front     | https://hub.docker.com/repository/docker/yvanniyonzima/best\_buy\_store\_front/general     |
-| best\_buy\_store\_admin     | https://hub.docker.com/repository/docker/yvanniyonzima/best\_buy\_store\_admin/general     |
-| best\_buy\_order\_service     | https://hub.docker.com/repository/docker/yvanniyonzima/best\_buy\_order\_service/general     |
-| best\_buy\_product\_service   | https://hub.docker.com/repository/docker/yvanniyonzima/best\_buy\_product\_service/general   |
-| best\_buy\_makeline\_service  | https://hub.docker.com/repository/docker/yvanniyonzima/best\_buy\_makeline\_service/general  |
-| best\_buy\_ai\_service        | https://hub.docker.com/repository/docker/yvanniyonzima/best\_buy\_ai\_service/general        |
+| best_buy_store_front     | https://hub.docker.com/repository/docker/yvanniyonzima/best_buy_store_front/general     |
+| best_buy_store_admin     | https://hub.docker.com/repository/docker/yvanniyonzima/best_buy_store_admin/general     |
+| best_buy_order_service     | https://hub.docker.com/repository/docker/yvanniyonzima/best_buy_order_service/general     |
+| best_buy_product_service   | https://hub.docker.com/repository/docker/yvanniyonzima/best_buy_product_service/general   |
+| best_buy_makeline_service  | https://hub.docker.com/repository/docker/yvanniyonzima/best_buy_makeline_service/general  |
+| best_buy_ai_service        | https://hub.docker.com/repository/docker/yvanniyonzima/best_buy_ai_service/general        |
 
 ## Issues and Limitations
 

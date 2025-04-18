@@ -2,7 +2,7 @@
 
 ## Updated Application Architecture
 
-
+![image](https://github.com/user-attachments/assets/13462c16-9b85-417f-b2c8-92c28c39b57a)
 
 ## Application and Architecture Explanation
 

@@ -51,72 +51,72 @@ spec:
   type: ClusterIP # Internal cluster service
 ---
 # StatefulSet for RabbitMQ
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: rabbitmq
-spec:
-  serviceName: rabbitmq # Headless service for RabbitMQ
-  replicas: 1 # Single replica
-  selector:
-    matchLabels:
-      app: rabbitmq
-  template:
-    metadata:
-      labels:
-        app: rabbitmq
-    spec:
-      nodeSelector:
-        "kubernetes.io/os": linux
-      containers:
-        - name: rabbitmq
-          image: rabbitmq:3-management # RabbitMQ image with management UI
-          ports:
-            - containerPort: 5672 # AMQP protocol port
-              name: rabbitmq-amqp
-            - containerPort: 15672 # HTTP management UI port
-              name: rabbitmq-http
-          env: # Environment variables for RabbitMQ
-            - name: RABBITMQ_DEFAULT_USER
-              value: "username" # Default username
-            - name: RABBITMQ_DEFAULT_PASS
-              value: "password" # Default password
-          resources: # Resource limits and requests
-            requests:
-              cpu: 10m
-              memory: 128Mi
-            limits:
-              cpu: 250m
-              memory: 256Mi
-          volumeMounts: # Mount configuration for RabbitMQ plugins
-            - name: rabbitmq-enabled-plugins
-              mountPath: /etc/rabbitmq/enabled_plugins
-              subPath: enabled_plugins
-      volumes:
-        - name: rabbitmq-enabled-plugins
-          configMap:
-            name: rabbitmq-enabled-plugins
-            items:
-              - key: rabbitmq_enabled_plugins
-                path: enabled_plugins
----
-# Service for RabbitMQ
-apiVersion: v1
-kind: Service
-metadata:
-  name: rabbitmq
-spec:
-  selector:
-    app: rabbitmq
-  ports:
-    - name: rabbitmq-amqp
-      port: 5672
-      targetPort: 5672
-    - name: rabbitmq-http
-      port: 15672
-      targetPort: 15672
-  type: ClusterIP
----
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: rabbitmq
+# spec:
+#   serviceName: rabbitmq # Headless service for RabbitMQ
+#   replicas: 1 # Single replica
+#   selector:
+#     matchLabels:
+#       app: rabbitmq
+#   template:
+#     metadata:
+#       labels:
+#         app: rabbitmq
+#     spec:
+#       nodeSelector:
+#         "kubernetes.io/os": linux
+#       containers:
+#         - name: rabbitmq
+#           image: rabbitmq:3-management # RabbitMQ image with management UI
+#           ports:
+#             - containerPort: 5672 # AMQP protocol port
+#               name: rabbitmq-amqp
+#             - containerPort: 15672 # HTTP management UI port
+#               name: rabbitmq-http
+#           env: # Environment variables for RabbitMQ
+#             - name: RABBITMQ_DEFAULT_USER
+#               value: "username" # Default username
+#             - name: RABBITMQ_DEFAULT_PASS
+#               value: "password" # Default password
+#           resources: # Resource limits and requests
+#             requests:
+#               cpu: 10m
+#               memory: 128Mi
+#             limits:
+#               cpu: 250m
+#               memory: 256Mi
+#           volumeMounts: # Mount configuration for RabbitMQ plugins
+#             - name: rabbitmq-enabled-plugins
+#               mountPath: /etc/rabbitmq/enabled_plugins
+#               subPath: enabled_plugins
+#       volumes:
+#         - name: rabbitmq-enabled-plugins
+#           configMap:
+#             name: rabbitmq-enabled-plugins
+#             items:
+#               - key: rabbitmq_enabled_plugins
+#                 path: enabled_plugins
+# ---
+# # Service for RabbitMQ
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rabbitmq
+# spec:
+#   selector:
+#     app: rabbitmq
+#   ports:
+#     - name: rabbitmq-amqp
+#       port: 5672
+#       targetPort: 5672
+#     - name: rabbitmq-http
+#       port: 15672
+#       targetPort: 15672
+#   type: ClusterIP
+#---
 # Deployment for Order Service
 apiVersion: apps/v1
 kind: Deployment
@@ -140,18 +140,25 @@ spec:
           ports:
             - containerPort: 3000 # Order service listens on this port
           env: # Environment variables for configuration
-            - name: ORDER_QUEUE_HOSTNAME
-              value: "rabbitmq"
-            - name: ORDER_QUEUE_PORT
-              value: "5672"
-            - name: ORDER_QUEUE_USERNAME
-              value: "username"
-            - name: ORDER_QUEUE_PASSWORD
-              value: "password"
-            - name: ORDER_QUEUE_NAME
-              value: "orders"
             - name: FASTIFY_ADDRESS
               value: "0.0.0.0"
+            - name: ORDER_QUEUE_HOSTNAME
+              value: "best-buy-service-bus.servicebus.windows.net" # Service bus hostname            
+            - name: ORDER_QUEUE_PORT
+              value: "5671" # Service bus port
+            - name: ORDER_QUEUE_USERNAME
+              value: "sender"
+            - name: ORDER_QUEUE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: best-buy-order-service-secret
+                  key: ORDER_QUEUE_PASSWORD # Secret for password
+            - name: ORDER_QUEUE_TRANSPORT
+              value: "tls" # Transport protocol
+            - name: ORDER_QUEUE_RECONNECT_LIMIT
+              value: "10" # Reconnect attempts
+            - name: OERDER_QUEUE_NAME
+              value: "orders" # Queue name
           resources: # Resource allocation
             requests:
               cpu: 1m
@@ -180,22 +187,22 @@ spec:
             failureThreshold: 5
             initialDelaySeconds: 3
             periodSeconds: 3
-      initContainers: # Initialization container to wait for RabbitMQ
-        - name: wait-for-rabbitmq
-          image: busybox
-          command:
-            [
-              "sh",
-              "-c",
-              "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done;",
-            ]
-          resources:
-            requests:
-              cpu: 1m
-              memory: 50Mi
-            limits:
-              cpu: 100m
-              memory: 256Mi
+      # initContainers: # Initialization container to wait for RabbitMQ
+      #   - name: wait-for-rabbitmq
+      #     image: busybox
+      #     command:
+      #       [
+      #         "sh",
+      #         "-c",
+      #         "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done;",
+      #       ]
+      #     resources:
+      #       requests:
+      #         cpu: 1m
+      #         memory: 50Mi
+      #       limits:
+      #         cpu: 100m
+      #         memory: 256Mi
 ---
 # Service for Order Service
 apiVersion: v1
@@ -234,14 +241,17 @@ spec:
           ports:
             - containerPort: 3001 # Makeline service listens on this port
           env: # Environment variables for configuration
-            - name: ORDER_QUEUE_URI
-              value: "amqp://rabbitmq:5672" # RabbitMQ connection string
-            - name: ORDER_QUEUE_USERNAME
-              value: "username"
-            - name: ORDER_QUEUE_PASSWORD
-              value: "password"
+            - name: AZURE_SERVICEBUS_FULLYQUALIFIEDNAMESPACE
+              value: "best-buy-service-bus.servicebus.windows.net"
             - name: ORDER_QUEUE_NAME
               value: "orders"
+            - name: ORDER_QUEUE_USERNAME
+              value: "listener"
+            - name: ORDER_QUEUE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: best-buy-makeline-service-secret
+                  key: ORDER_QUEUE_PASSWORD # Secret for password
             - name: ORDER_DB_URI
               value: "mongodb://mongodb:27017" # MongoDB connection string
             - name: ORDER_DB_NAME
@@ -521,9 +531,9 @@ spec:
             - name: AZURE_OPENAI_DEPLOYMENT_NAME # required if using Azure OpenAI
               value: "gpt-4"
             - name: AZURE_OPENAI_ENDPOINT # required if using Azure OpenAI
-              value: "https://best-buy-openai.openai.azure.com/"
+              value: "https://best-buy-open-ai.openai.azure.com/"
             - name: AZURE_OPENAI_DALLE_ENDPOINT
-              value: "https://best-buy-openai.openai.azure.com/"
+              value: "https://best-buy-open-ai.openai.azure.com/"
             - name: AZURE_OPENAI_DALLE_DEPLOYMENT_NAME
               value: "dall-e-3"
             - name: OPENAI_API_KEY # always required

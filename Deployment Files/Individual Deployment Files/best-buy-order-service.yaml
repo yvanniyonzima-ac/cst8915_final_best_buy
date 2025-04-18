@@ -1,0 +1,108 @@
+# Deployment for Order Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: best-buy-order-service
+spec:
+  replicas: 1 # Single replica
+  selector:
+    matchLabels:
+      app: best-buy-order-service
+  template:
+    metadata:
+      labels:
+        app: best-buy-order-service
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - name: best-buy-order-service
+          image: yvanniyonzima/best_buy_order_service:latest # Custom image for order service
+          ports:
+            - containerPort: 3000 # Order service listens on this port
+          env: # Environment variables for configuration
+            # - name: USE_WORKLOAD_IDENTITY_AUTH
+            #   value: "true"
+            # - name: AZURE_SERVICEBUS_FULLYQUALIFIEDNAMESPACE
+            #   value: "bestbuy-service-bus-namespace.servicebus.windows.net"
+            # - name: ORDER_QUEUE_NAME
+            #   value: "best-buy-service-bus"
+            # - name: ORDER_QUEUE_TRANSPORT
+            #   value: "tls"
+            - name: FASTIFY_ADDRESS
+              value: "0.0.0.0"
+            - name: ORDER_QUEUE_HOSTNAME
+              value: "best-buy-service-bus.servicebus.windows.net" # Service bus hostname            
+            - name: ORDER_QUEUE_PORT
+              value: "5671" # Service bus port
+            - name: ORDER_QUEUE_USERNAME
+              value: "sender"
+            - name: ORDER_QUEUE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: best-buy-order-service-secret
+                  key: ORDER_QUEUE_PASSWORD # Secret for password
+            - name: ORDER_QUEUE_TRANSPORT
+              value: "tls" # Transport protocol
+            - name: ORDER_QUEUE_RECONNECT_LIMIT
+              value: "10" # Reconnect attempts
+            - name: OERDER_QUEUE_NAME
+              value: "orders" # Queue name
+          resources: # Resource allocation
+            requests:
+              cpu: 1m
+              memory: 50Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+          startupProbe: # Initial health check
+            httpGet:
+              path: /health
+              port: 3000
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          readinessProbe: # Ready status probe
+            httpGet:
+              path: /health
+              port: 3000
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe: # Ongoing health check
+            httpGet:
+              path: /health
+              port: 3000
+            failureThreshold: 5
+            initialDelaySeconds: 3
+            periodSeconds: 3
+      # initContainers: # Initialization container to wait for RabbitMQ
+      #   - name: wait-for-rabbitmq
+      #     image: busybox
+      #     command:
+      #       [
+      #         "sh",
+      #         "-c",
+      #         "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done;",
+      #       ]
+      #     resources:
+      #       requests:
+      #         cpu: 1m
+      #         memory: 50Mi
+      #       limits:
+      #         cpu: 100m
+      #         memory: 256Mi
+---
+# Service for Order Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: best-buy-order-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: best-buy-order-service
